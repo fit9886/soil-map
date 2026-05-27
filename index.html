@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>全国農耕地土壌図・農研機構拠点</title>
+
+<link href="https://unpkg.com/maplibre-gl@4.3.2/dist/maplibre-gl.css" rel="stylesheet">
+<script src="https://unpkg.com/maplibre-gl@4.3.2/dist/maplibre-gl.js"></script>
+
+<style>
+html, body, #map {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.legend {
+  position: absolute;
+  bottom: 30px;
+  left: 30px;
+  z-index: 10;
+  background: white;
+  padding: 10px;
+  border: 1px solid #999;
+  font-size: 12px;
+  max-height: 320px;
+  overflow-y: auto;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+}
+
+.legend b {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.marker {
+  width: 13px;
+  height: 13px;
+  background: red;
+  border: 2px solid black;
+  border-radius: 50%;
+}
+</style>
+</head>
+
+<body>
+<div id="map"></div>
+
+<div class="legend">
+<b>土壌分類</b>
+<div><span style="background:#c8c8c8;display:inline-block;width:16px;height:11px;border:1px solid #999;"></span> A2 盛土造成土</div>
+<div><span style="background:#ddf7ef;display:inline-block;width:16px;height:11px;border:1px solid #999;"></span> B1 泥炭土</div>
+<div><span style="background:#ecf8d8;display:inline-block;width:16px;height:11px;border:1px solid #999;"></span> C1 ポドゾル</div>
+<div><span style="background:#231f20;display:inline-block;width:16px;height:11px;border:1px solid #999;"></span> D1 未熟黒ボク土</div>
+<div><span style="background:#442d23;display:inline-block;width:16px;height:11px;border:1px solid #999;"></span> D2 グライ黒ボク土</div>
+<div><span style="background:#523a26;display:inline-block;width:16px;height:11px;border:1px solid #999;"></span> D3 多湿黒ボク土</div>
+<div><span style="background:#30304c;display:inline-block;width:16px;height:11px;border:1px solid #999;"></span> D4 褐色黒ボク土</div>
+<div><span style="background:#37413c;display:inline-block;width:16px;height:11px;border:1px solid #999;"></span> D5 非アロフェン質黒ボク土</div>
+<div><span style="background:#4a324d;display:inline-block;width:16px;height:11px;border:1px solid #999;"></span> D6 アロフェン質黒ボク土</div>
+<div><span style="background:#fff4c2;display:inline-block;width:16px;height:11px;border:1px solid #999;"></span> E1 石灰性暗赤色土</div>
+<div><span style="background:#ffe27a;display:inline-block;width:16px;height:11px;border:1px solid #999;"></span> E2 酸性暗赤色土</div>
+<div><span style="background:#f6c841;display:inline-block;width:16px;height:11px;border:1px solid #999;"></span> E3 塩基性暗赤色土</div>
+<div><span style="background:#ffe0b8;display:inline-block;width:16px;height:11px;border:1px solid #999;"></span> F1 低地水田土</div>
+<div><span style="background:#ffc078;display:inline-block;width:16px;height:11px;border:1px solid #999;"></span> F2 グライ低地土</div>
+<div><span style="background:#fa9a3d;display:inline-block;width:16px;height:11px;border:1px solid #999;"></span> F3 灰色低地土</div>
+<div><span style="background:#d66e14;display:inline-block;width:16px;height:11px;border:1px solid #999;"></span> F4 褐色低地土</div>
+<div><span style="background:#a84800;display:inline-block;width:16px;height:11px;border:1px solid #999;"></span> F5 未熟低地土</div>
+<div><span style="background:#f2c1b8;display:inline-block;width:16px;height:11px;border:1px solid #999;"></span> G1 粘土集積赤黄色土</div>
+<div><span style="background:#e58c7c;display:inline-block;width:16px;height:11px;border:1px solid #999;"></span> G2 風化変質赤黄色土</div>
+<div><span style="background:#f7d4e4;display:inline-block;width:16px;height:11px;border:1px solid #999;"></span> H1 停滞水グライ土</div>
+<div><span style="background:#eba6c8;display:inline-block;width:16px;height:11px;border:1px solid #999;"></span> H2 疑似グライ土</div>
+<div><span style="background:#e6e6e6;display:inline-block;width:16px;height:11px;border:1px solid #999;"></span> I1 褐色森林土</div>
+<div><span style="background:#ddddf2;display:inline-block;width:16px;height:11px;border:1px solid #999;"></span> J1 火山放出物未熟土</div>
+<div><span style="background:#bdbde5;display:inline-block;width:16px;height:11px;border:1px solid #999;"></span> J2 砂質未熟土</div>
+<div><span style="background:#9696d3;display:inline-block;width:16px;height:11px;border:1px solid #999;"></span> J3 固結岩屑土</div>
+<div><span style="background:#7070b8;display:inline-block;width:16px;height:11px;border:1px solid #999;"></span> J4 陸成未熟土</div>
+</div>
+
+<script>
+const naroPoints = [{"name": "北海道農業研究センター", "base": "本所", "lat": 42.996433, "lon": 141.394989}, {"name": "北海道農業研究センター", "base": "芽室研究拠点", "lat": 42.890411, "lon": 143.082382}, {"name": "東北農業研究センター", "base": "盛岡研究拠点(盛岡市)", "lat": 39.741524, "lon": 141.133148}, {"name": "東北農業研究センター", "base": "大仙研究拠点(大仙市) 四ツ屋地区", "lat": 39.491631, "lon": 140.497681}, {"name": "東北農業研究センター", "base": "大仙研究拠点(大仙市) 刈和野地区", "lat": 39.547623, "lon": 140.375748}, {"name": "東北農業研究センター", "base": "福島研究拠点(福島市)", "lat": 37.714264, "lon": 140.385696}, {"name": "中日本農業研究センター", "base": "中日本農業研究センター(茨城県つくば市)", "lat": 36.032475, "lon": 140.097137}, {"name": "中日本農業研究センター", "base": "上越研究拠点(新潟県上越市)", "lat": 37.116592, "lon": 138.269073}, {"name": "中日本農業研究センター", "base": "安濃野菜研究拠点(三重県津市)", "lat": 34.772491, "lon": 136.429489}, {"name": "西日本農業研究センター", "base": "福山研究拠点", "lat": 34.501335, "lon": 133.386002}, {"name": "西日本農業研究センター", "base": "善通寺研究拠点(仙遊地区)", "lat": 34.230049, "lon": 133.775513}, {"name": "西日本農業研究センター", "base": "善通寺研究拠点(生野地区)", "lat": 34.211548, "lon": 133.786118}, {"name": "西日本農業研究センター", "base": "大田研究拠点", "lat": 35.168468, "lon": 132.501144}, {"name": "九州沖縄農業研究センター", "base": "合志研究拠点", "lat": 32.875481, "lon": 130.742996}, {"name": "九州沖縄農業研究センター", "base": "筑後・久留米研究拠点(筑後)", "lat": 33.207764, "lon": 130.491074}, {"name": "九州沖縄農業研究センター", "base": "筑後・久留米研究拠点(久留米)", "lat": 33.305439, "lon": 130.548828}, {"name": "九州沖縄農業研究センター", "base": "都城研究拠点", "lat": 31.751341, "lon": 131.025711}, {"name": "九州沖縄農業研究センター", "base": "種子島研究拠点", "lat": 30.742813, "lon": 131.060013}, {"name": "九州沖縄農業研究センター", "base": "糸満駐在", "lat": 26.107698, "lon": 127.691353}, {"name": "九州沖縄農業研究センター", "base": "口之津カンキツ研究試験地", "lat": 32.597233, "lon": 130.176788}, {"name": "農村工学研究部門", "base": "nan", "lat": 36.032475, "lon": 140.097137}, {"name": "農業機械研究部門", "base": "nan", "lat": 35.918289, "lon": 139.598083}, {"name": "農業機械研究部門", "base": "附属農場", "lat": 36.088451, "lon": 139.539795}, {"name": "農業機械研究部門", "base": "つくば研究拠点", "lat": 36.022903, "lon": 140.098541}, {"name": "作物研究部門", "base": "nan", "lat": 36.032475, "lon": 140.097137}, {"name": "畜産研究部門", "base": "つくば研究拠点池の台事業場", "lat": 36.021229, "lon": 140.12207}, {"name": "畜産研究部門", "base": "那須塩原研究拠点", "lat": 36.919037, "lon": 139.930222}, {"name": "畜産研究部門", "base": "御代田山地放牧研究拠点", "lat": 36.346306, "lon": 138.493454}, {"name": "畜産研究部門", "base": "つくば研究拠点観音台第1事業場", "lat": 36.032475, "lon": 140.097137}, {"name": "食品研究部門", "base": "nan", "lat": 36.032475, "lon": 140.097137}, {"name": "果樹茶業研究部門", "base": "果樹茶業研究部門 つくばエリア(茨城県つくば市)", "lat": 36.047253, "lon": 140.096054}, {"name": "果樹茶業研究部門", "base": "カンキツ研究領域(静岡県静岡市)", "lat": 35.054707, "lon": 138.523453}, {"name": "果樹茶業研究部門", "base": "リンゴ研究領域(岩手県盛岡市)", "lat": 39.768074, "lon": 141.133499}, {"name": "果樹茶業研究部門", "base": "ブドウ・カキ研究領域(広島県東広島市)", "lat": 34.343685, "lon": 132.800735}, {"name": "果樹茶業研究部門", "base": "茶業研究領域(静岡県島田市)", "lat": 34.808403, "lon": 138.134247}, {"name": "果樹茶業研究部門", "base": "茶業研究領域(鹿児島県枕崎市)", "lat": 31.278757, "lon": 130.336746}, {"name": "野菜花き研究部門", "base": "つくば(本所)", "lat": 36.028893, "lon": 140.102417}, {"name": "野菜花き研究部門", "base": "つくば(藤本)", "lat": 36.047253, "lon": 140.096054}, {"name": "野菜花き研究部門", "base": "安濃野菜研究拠点", "lat": 34.772491, "lon": 136.429489}, {"name": "生物機能利用研究部門", "base": "(藤本・大わし事業場(大わし地区)、本所)", "lat": 36.054798, "lon": 140.087234}, {"name": "生物機能利用研究部門", "base": "(藤本・大わし事業場(上横場地区))", "lat": 36.049519, "lon": 140.0905}, {"name": "生物機能利用研究部門", "base": "(観音台第2事業場)", "lat": 36.032475, "lon": 140.097137}, {"name": "生物機能利用研究部門", "base": "(観音台第3事業場)", "lat": 36.028893, "lon": 140.102417}, {"name": "生物機能利用研究部門", "base": "(池の台地区)", "lat": 36.021229, "lon": 140.12207}, {"name": "農業環境研究部門", "base": "nan", "lat": 36.028893, "lon": 140.102417}, {"name": "植物防疫研究部門", "base": "つくば研究拠点 観音台第1事業場", "lat": 36.032475, "lon": 140.097137}, {"name": "植物防疫研究部門", "base": "つくば研究拠点 観音台第3事業場", "lat": 35.800709, "lon": 139.528885}, {"name": "植物防疫研究部門", "base": "つくば研究拠点 藤本・大わし事業場", "lat": 36.047253, "lon": 140.096054}, {"name": "植物防疫研究部門", "base": "盛岡研究拠点", "lat": 39.768074, "lon": 141.133499}, {"name": "植物防疫研究部門", "base": "福島研究拠点", "lat": 37.714264, "lon": 140.385696}, {"name": "植物防疫研究部門", "base": "金谷茶業研究拠点", "lat": 34.808403, "lon": 138.134247}, {"name": "植物防疫研究部門", "base": "安芸津ブドウ・カキ研究拠点", "lat": 34.343685, "lon": 132.800735}, {"name": "植物防疫研究部門", "base": "合志研究拠点", "lat": 32.875481, "lon": 130.742996}, {"name": "動物衛生研究部門", "base": "nan", "lat": 36.028893, "lon": 140.102417}, {"name": "動物衛生研究部門", "base": "札幌研究拠点", "lat": 43.009224, "lon": 141.413712}, {"name": "動物衛生研究部門", "base": "鹿児島研究拠点", "lat": 31.541668, "lon": 130.47821}, {"name": "動物衛生研究部門", "base": "小平海外病研究拠点", "lat": 35.712818, "lon": 139.474884}, {"name": "農業情報研究センター", "base": "つくば", "lat": 36.022903, "lon": 140.098541}, {"name": "農業情報研究センター", "base": "東京", "lat": 35.667286, "lon": 139.750992}, {"name": "遺伝資源研究センター", "base": "nan", "lat": 36.032475, "lon": 140.097137}, {"name": "遺伝資源研究センター", "base": "北杜研究拠点", "lat": 35.895557, "lon": 138.326645}];
+const soilColor = ["match", ["get", "群コード"], "A2", "#c8c8c8", "B1", "#ddf7ef", "C1", "#ecf8d8", "D1", "#231f20", "D2", "#442d23", "D3", "#523a26", "D4", "#30304c", "D5", "#37413c", "D6", "#4a324d", "E1", "#fff4c2", "E2", "#ffe27a", "E3", "#f6c841", "F1", "#ffe0b8", "F2", "#ffc078", "F3", "#fa9a3d", "F4", "#d66e14", "F5", "#a84800", "G1", "#f2c1b8", "G2", "#e58c7c", "H1", "#f7d4e4", "H2", "#eba6c8", "I1", "#e6e6e6", "J1", "#ddddf2", "J2", "#bdbde5", "J3", "#9696d3", "J4", "#7070b8", "#cccccc"];
+
+const map = new maplibregl.Map({
+  container: "map",
+  style: {
+    version: 8,
+    sources: {
+      osm: {
+        type: "raster",
+        tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
+        tileSize: 256
+      },
+      soil: {
+        type: "vector",
+        tiles: ["./soil_vector_tiles/{z}/{x}/{y}.pbf"],
+        minzoom: 0,
+        maxzoom: 14
+      }
+    },
+    layers: [
+      {
+        id: "osm",
+        type: "raster",
+        source: "osm"
+      },
+      {
+        id: "soil-fill",
+        type: "fill",
+        source: "soil",
+        "source-layer": "hp_4326",
+        paint: {
+          "fill-color": soilColor,
+          "fill-opacity": 0.65
+        }
+      },
+      {
+        id: "soil-line",
+        type: "line",
+        source: "soil",
+        "source-layer": "hp_4326",
+        paint: {
+          "line-color": "#555555",
+          "line-width": 0.2
+        }
+      }
+    ]
+  },
+  center: [137, 36],
+  zoom: 5
+});
+
+map.addControl(new maplibregl.NavigationControl());
+
+map.on("click", "soil-fill", (e) => {
+  const p = e.features[0].properties;
+  new maplibregl.Popup()
+    .setLngLat(e.lngLat)
+    .setHTML(`
+      <b>${p["土壌群分類名"] || ""}</b><br>
+      群コード: ${p["群コード"] || ""}<br>
+      包括統群: ${p["包括_統群"] || ""}
+    `)
+    .addTo(map);
+});
+
+map.on("mouseenter", "soil-fill", () => {
+  map.getCanvas().style.cursor = "pointer";
+});
+
+map.on("mouseleave", "soil-fill", () => {
+  map.getCanvas().style.cursor = "";
+});
+
+for (const p of naroPoints) {
+  const el = document.createElement("div");
+  el.className = "marker";
+
+  new maplibregl.Marker(el)
+    .setLngLat([p.lon, p.lat])
+    .setPopup(
+      new maplibregl.Popup().setHTML(
+        `<b>${p.name}</b><br>${p.base}`
+      )
+    )
+    .addTo(map);
+}
+</script>
+</body>
+</html>
