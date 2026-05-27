@@ -108,7 +108,7 @@ const map = new maplibregl.Map({
         id: "soil-fill",
         type: "fill",
         source: "soil",
-        "source-layer": "hp_4326",
+        "source-layer": "soil_vector_tiles",
         paint: {
           "fill-color": soilColor,
           "fill-opacity": 0.65
@@ -118,7 +118,7 @@ const map = new maplibregl.Map({
         id: "soil-line",
         type: "line",
         source: "soil",
-        "source-layer": "hp_4326",
+        "source-layer": "soil_vector_tiles",
         paint: {
           "line-color": "#555555",
           "line-width": 0.2
